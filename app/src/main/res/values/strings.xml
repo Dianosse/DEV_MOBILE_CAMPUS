@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Campus</string>
+    <string name="no_location">Lieu non renseigné</string>
+    <string name="reserver">Réserver</string>
+    <string name="event_details">Voir -></string>
+    <string name="campus">Campus</string>
+    <string name="desc_img_event">Image Event</string>
 </resources>

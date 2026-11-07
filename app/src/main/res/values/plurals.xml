@@ -1,0 +1,6 @@
+<resources>
+    <plurals name="nb_places">
+        <item quantity="one">%d place disponible</item>
+        <item quantity="other">%d places disponibles</item>
+    </plurals>
+</resources>
