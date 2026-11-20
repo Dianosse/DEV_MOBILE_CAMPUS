@@ -5,4 +5,9 @@
     <string name="event_details">Voir -></string>
     <string name="campus">Campus</string>
     <string name="desc_img_event">Image Event</string>
+    <string name="search">Rechercher</string>
+    <string name="MyFavoris">Mes favoris</string>
+    <string name="NbResult">Nombre de résultats</string>
+    <string name="AddFavoris">Ajouter aux favoris</string>
+    <string name="DeleteFavoris">Retirer des favoris</string>
 </resources>

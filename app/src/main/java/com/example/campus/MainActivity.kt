@@ -20,10 +20,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -50,31 +58,141 @@ class MainActivity : ComponentActivity() {
                     Event(5, "ForumForumForumForumForumForumForum", "CAMPUS", "Hall", 50, "C'est plein plein plein de forum")
                 )
 
-                val categories = listOf(
-                    "TECH",
-                    "SPORT",
-                    "MUSIQUE",
-                    "CAMPUS",
-                    "MUSIQUE",
-                    "CAMPUS",
-                    "MUSIQUE",
-                    "CAMPUS",
-                    "MUSIQUE",
-                    "CAMPUS",
-                    "MUSIQUE",
-                    "CAMPUS",
-                    "MUSIQUE",
-                    "CAMPUS",
-                    "MUSIQUE",
-                    "CAMPUS"
-                )
-
-                EventListScreen(events, categories)
+                EventListScreen(events)
             }
         }
     }
 }
 
+
+@Composable
+fun SearchField(
+    state : TextFieldState,
+    modifier: Modifier = Modifier
+) {
+    TextField(
+        state = state,
+        modifier = modifier,
+        label = { Text(stringResource(R.string.search)) },
+    )
+}
+
+
+@Composable
+fun CategoryRow(
+    categories: List<String>,
+    selected: String?,
+    onCategorySelect: (String) -> Unit
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(categories) { category ->
+            if (category == selected) {
+                Button(
+                    onClick = { onCategorySelect(category) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(category)
+                }
+            } else {
+                Button(
+                    onClick = { onCategorySelect(category) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text(category)
+                }
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EventListScreen(events: List<Event>) {
+
+    val queryState = rememberTextFieldState()
+
+    var cateStat by rememberSaveable() { mutableStateOf<String?>(null) }
+    var favoriteIds by rememberSaveable { mutableStateOf(listOf<Int>()) }
+
+    val categories = events.map { it.category }.distinct()
+
+
+    val visibleEvents = events.filter {
+        it.title.contains(queryState.text, ignoreCase = true) &&
+                (cateStat == null || it.category.equals(cateStat))
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.campus)) }
+            )
+        }
+    ) { innerPadding ->
+
+        LazyColumn(
+            modifier = Modifier.padding(innerPadding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+
+            item {
+                Text(stringResource(R.string.MyFavoris) + " : ${favoriteIds.size}")
+            }
+
+            item {
+                SearchField(
+                    state = queryState,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            item {
+                Text(stringResource(R.string.NbResult) + " : ${visibleEvents.size}")
+            }
+
+            item {
+                CategoryRow(
+                    categories = categories,
+                    selected = cateStat,
+                    onCategorySelect = {
+                        if(cateStat != it){
+                            cateStat = it
+                        } else {
+                            cateStat = null
+                        }
+                    }
+                )
+            }
+
+            items(visibleEvents, key = { it.id }) { event ->
+
+                val isFavorite = event.id in favoriteIds
+
+                EventCard(
+                    event = event,
+                    onClick = { Log.d("BOUTON VOIR", "Click sur le voir pour l'event : ${event.title}") },
+                    onBook = { Log.d("BOUTON RESERVER", "Click sur le Réserver pour l'event : ${event.title}") },
+                    isFavorite = isFavorite,
+                    onFavoriteClick = {
+                        favoriteIds = if (isFavorite) {
+                            favoriteIds - event.id
+                        } else {
+                            favoriteIds + event.id
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
 
 
 @Composable
@@ -129,7 +247,7 @@ fun EventDetailScreen(event: Event, onBook: () -> Unit) {
 }
 
 
-@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_NO)
+//@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_NO)
 @Composable
 fun EventDetailScreenPreviewLight() {
     val event = Event(
@@ -150,7 +268,7 @@ fun EventDetailScreenPreviewLight() {
 
 }
 
-@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
+//@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
 @Composable
 fun EventDetailScreenPreviewDark() {
     val event = Event(
@@ -173,41 +291,6 @@ fun EventDetailScreenPreviewDark() {
 
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun EventListScreen(events : List<Event>, categories: List<String>) {
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.campus)) })
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item{
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(categories) { category ->
-                        Text(category)
-                    }
-                }
-            }
-            items(events, key = { it.id }) { event ->
-                EventCard(
-                    event = event,
-                    onClick = { Log.d("BOUTON VOIR", "Click sur le voir pour l'event : ${event.title}") },
-                    onBook = { Log.d("BOUTON RESERVER", "Click sur le Réserver pour l'event : ${event.title}") }
-                )
-            }
-        }
-    }
-}
-
-
 @Preview(showBackground = true, uiMode = UI_MODE_NIGHT_NO)
 @Composable
 fun EventCardPreviewLight() {
@@ -224,12 +307,14 @@ fun EventCardPreviewLight() {
         EventCard(
             event = event,
             onClick = {},
-            onBook = {}
+            onBook = {},
+            isFavorite = false,
+            onFavoriteClick = {}
         )
     }
 }
 
-@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
+//@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
 @Composable
 fun EventCardPreviewDark() {
     val event = Event(
@@ -245,7 +330,9 @@ fun EventCardPreviewDark() {
         EventCard(
             event = event,
             onClick = {},
-            onBook = {}
+            onBook = {},
+            isFavorite = false,
+            onFavoriteClick = {}
         )
     }
 }
@@ -257,6 +344,8 @@ fun EventCard(
     event : Event,
     onClick: () -> Unit,
     onBook: () -> Unit,
+    isFavorite: Boolean,
+    onFavoriteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -285,7 +374,19 @@ fun EventCard(
                 )
             }
             Spacer(modifier = Modifier.height(6.dp))
-            Text(event.location ?: stringResource(R.string.no_location))
+            Row(modifier = Modifier
+                .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(event.location ?: stringResource(R.string.no_location))
+                TextButton(
+                    onClick = onFavoriteClick,
+                    ) {
+                    Text(if (isFavorite) stringResource(R.string.DeleteFavoris) else stringResource(R.string.AddFavoris),
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(6.dp))
 
             Row(
@@ -312,7 +413,7 @@ fun EventCard(
 
 
 
-@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_NO)
+//@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_NO)
 @Composable
 fun EventListScreenPreviewLight() {
     CampusTheme {
@@ -320,15 +421,14 @@ fun EventListScreenPreviewLight() {
             events = listOf(
                 Event(1, "Conférence Kotlin", "TECH", "Salle 204", 30, "Description"),
                 Event(2, "Tournoi", "SPORT", "Gymnase", 0, "Description")
-            ),
-            categories = listOf("TECH", "SPORT")
+            )
         )
     }
 }
 
 
 
-@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
+//@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
 @Composable
 fun EventListScreenPreviewDark() {
     CampusTheme {
@@ -336,8 +436,7 @@ fun EventListScreenPreviewDark() {
             events = listOf(
                 Event(1, "Conférence Kotlin", "TECH", "Salle 204", 30, "Description"),
                 Event(2, "Tournoi", "SPORT", "Gymnase", 0, "Description")
-            ),
-            categories = listOf("TECH", "SPORT")
+            )
         )
     }
 }
