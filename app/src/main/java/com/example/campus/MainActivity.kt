@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
@@ -29,7 +28,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,6 +38,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.campus.data.sampleEvents
 import com.example.campus.model.Event
 import com.example.campus.ui.theme.CampusTheme
 
@@ -49,16 +48,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CampusTheme () {
-
-                val events = listOf(
-                    Event(1, "Conférence Kotlin", "TECH", "Salle 204", 30, "C'est une conférence"),
-                    Event(2, "Atelier Android", "TECH", null, 15, "C'est un atelier"),
-                    Event(3, "Tournoi", "SPORT", "Gymnase", 0, "C'est un tournoi"),
-                    Event(4, "Concert", "MUSIQUE", "Amphi A", 100, "C'est un concert"),
-                    Event(5, "ForumForumForumForumForumForumForum", "CAMPUS", "Hall", 50, "C'est plein plein plein de forum")
-                )
-
-                EventListScreen(events)
+                EventsScreen()
             }
         }
     }
@@ -114,12 +104,15 @@ fun CategoryRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventListScreen(events: List<Event>) {
+fun EventListScreen(
+    events: List<Event>,
+    favoriteIds: List<Int>,
+    onFavoriteToggle: (Int) -> Unit
+) {
 
     val queryState = rememberTextFieldState()
 
     var cateStat by rememberSaveable() { mutableStateOf<String?>(null) }
-    var favoriteIds by rememberSaveable { mutableStateOf(listOf<Int>()) }
 
     val categories = events.map { it.category }.distinct()
 
@@ -181,13 +174,7 @@ fun EventListScreen(events: List<Event>) {
                     onClick = { Log.d("BOUTON VOIR", "Click sur le voir pour l'event : ${event.title}") },
                     onBook = { Log.d("BOUTON RESERVER", "Click sur le Réserver pour l'event : ${event.title}") },
                     isFavorite = isFavorite,
-                    onFavoriteClick = {
-                        favoriteIds = if (isFavorite) {
-                            favoriteIds - event.id
-                        } else {
-                            favoriteIds + event.id
-                        }
-                    }
+                    onFavoriteClick = { onFavoriteToggle(event.id) }
                 )
             }
         }
@@ -246,96 +233,6 @@ fun EventDetailScreen(event: Event, onBook: () -> Unit) {
     }
 }
 
-
-//@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_NO)
-@Composable
-fun EventDetailScreenPreviewLight() {
-    val event = Event(
-        id = 1,
-        title = "Conférence KotlinConférence KotlinConférence KotlinConférence KotlinConférence Kotlin",
-        category = "TECH",
-        location = "Salle 204",
-        capacity = 0,
-        description = "C'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférence"
-    )
-
-    CampusTheme {
-        EventDetailScreen(
-            event = event,
-            onBook = {}
-        )
-    }
-
-}
-
-//@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
-@Composable
-fun EventDetailScreenPreviewDark() {
-    val event = Event(
-        id = 1,
-        title = "Conférence KotlinConférence KotlinConférence KotlinConférence KotlinConférence Kotlin",
-        category = "TECH",
-        location = "Salle 204",
-        capacity = 0,
-        description = "C'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférence"
-    )
-
-    CampusTheme {
-        EventDetailScreen(
-            event = event,
-            onBook = {}
-        )
-    }
-
-}
-
-
-
-@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_NO)
-@Composable
-fun EventCardPreviewLight() {
-    val event = Event(
-        id = 1,
-        title = "Conférence KotlinConférence KotlinConférence KotlinConférence KotlinConférence Kotlin",
-        category = "TECH",
-        location = "Salle 204",
-        capacity = 0,
-        description = "C'est une conférence"
-    )
-
-    CampusTheme {
-        EventCard(
-            event = event,
-            onClick = {},
-            onBook = {},
-            isFavorite = false,
-            onFavoriteClick = {}
-        )
-    }
-}
-
-//@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
-@Composable
-fun EventCardPreviewDark() {
-    val event = Event(
-        id = 1,
-        title = "Conférence KotlinConférence KotlinConférence KotlinConférence KotlinConférence Kotlin",
-        category = "TECH",
-        location = "Salle 204",
-        capacity = 0,
-        description = "C'est une conférence"
-    )
-
-    CampusTheme {
-        EventCard(
-            event = event,
-            onClick = {},
-            onBook = {},
-            isFavorite = false,
-            onFavoriteClick = {}
-        )
-    }
-}
 
 
 
@@ -411,17 +308,68 @@ fun EventCard(
 
 
 
-
-
 //@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_NO)
 @Composable
-fun EventListScreenPreviewLight() {
+fun EventDetailScreenPreviewLight() {
+    val event = Event(
+        id = 1,
+        title = "Conférence KotlinConférence KotlinConférence KotlinConférence KotlinConférence Kotlin",
+        category = "TECH",
+        location = "Salle 204",
+        capacity = 0,
+        description = "C'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférence"
+    )
+
     CampusTheme {
-        EventListScreen(
-            events = listOf(
-                Event(1, "Conférence Kotlin", "TECH", "Salle 204", 30, "Description"),
-                Event(2, "Tournoi", "SPORT", "Gymnase", 0, "Description")
-            )
+        EventDetailScreen(
+            event = event,
+            onBook = {}
+        )
+    }
+
+}
+
+
+//@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
+@Composable
+fun EventDetailScreenPreviewDark() {
+    val event = Event(
+        id = 1,
+        title = "Conférence KotlinConférence KotlinConférence KotlinConférence KotlinConférence Kotlin",
+        category = "TECH",
+        location = "Salle 204",
+        capacity = 0,
+        description = "C'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférenceC'est une conférence"
+    )
+
+    CampusTheme {
+        EventDetailScreen(
+            event = event,
+            onBook = {}
+        )
+    }
+
+}
+
+@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_NO)
+@Composable
+fun EventCardPreviewLight() {
+    val event = Event(
+        id = 1,
+        title = "Conférence KotlinConférence KotlinConférence KotlinConférence KotlinConférence Kotlin",
+        category = "TECH",
+        location = "Salle 204",
+        capacity = 0,
+        description = "C'est une conférence"
+    )
+
+    CampusTheme {
+        EventCard(
+            event = event,
+            onClick = {},
+            onBook = {},
+            isFavorite = false,
+            onFavoriteClick = {}
         )
     }
 }
@@ -430,13 +378,52 @@ fun EventListScreenPreviewLight() {
 
 //@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
 @Composable
+fun EventCardPreviewDark() {
+    val event = Event(
+        id = 1,
+        title = "Conférence KotlinConférence KotlinConférence KotlinConférence KotlinConférence Kotlin",
+        category = "TECH",
+        location = "Salle 204",
+        capacity = 0,
+        description = "C'est une conférence"
+    )
+
+    CampusTheme {
+        EventCard(
+            event = event,
+            onClick = {},
+            onBook = {},
+            isFavorite = false,
+            onFavoriteClick = {}
+        )
+    }
+}
+
+
+/*@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_NO)
+@Composable
+fun EventListScreenPreviewLight() {
+    CampusTheme {
+        EventListScreen(
+            events = listOf(
+                Event(1, "Conférence Kotlin", "TECH", "Salle 204", 30, "Description"),
+                Event(2, "Tournoi", "SPORT", "Gymnase", 0, "Description")
+            ),
+        )
+    }
+}*/
+
+
+
+/*@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
+@Composable
 fun EventListScreenPreviewDark() {
     CampusTheme {
         EventListScreen(
             events = listOf(
                 Event(1, "Conférence Kotlin", "TECH", "Salle 204", 30, "Description"),
                 Event(2, "Tournoi", "SPORT", "Gymnase", 0, "Description")
-            )
+            ),
         )
     }
-}
+}*/
